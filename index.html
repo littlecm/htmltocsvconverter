@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process Pro CRM HTML → CSV Converter</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <div class="container mx-auto p-4">
+        <h1 class="text-2xl font-bold text-center mb-4">Process Pro CRM HTML → CSV Converter</h1>
+        <div class="flex justify-center items-center flex-col">
+            <input type="file" id="fileInput" class="mb-4 p-2 border border-gray-300 rounded">
+            <button onclick="processFile()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700">Convert to CSV</button>
+            <br><br>
+            <a id="downloadLink" style="display:none;" class="bg-green-500 text-white px-4 py-2 rounded mt-4 hover:bg-green-700">Download CSV</a>
+        </div>
+    </div>
+
+    <script>
+        function processFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(event.target.result, 'text/html');
+                    const table = doc.querySelector('table');
+                    const csv = tableToCSV(table);
+                    downloadCSV(csv);
+                };
+                reader.readAsText(file);
+            } else {
+                alert('Please upload a file first.');
+            }
+        }
+
+        function tableToCSV(table) {
+            let rows = Array.from(table.querySelectorAll('tr'));
+            let csvContent = "";
+
+            rows.forEach(row => {
+                let cols = Array.from(row.querySelectorAll('td, th'));
+                let rowData = cols.map(col => col.innerText.replace(/,/g, ''));
+                csvContent += rowData.join(",") + "\r\n";
+            });
+
+            return csvContent;
+        }
+
+        function downloadCSV(csv) {
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const downloadLink = document.getElementById('downloadLink');
+
+            downloadLink.href = url;
+            downloadLink.download = 'table.csv';
+            downloadLink.style.display = 'block';
+            downloadLink.innerText = 'Download CSV';
+        }
+    </script>
+</body>
+</html>
